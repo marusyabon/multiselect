@@ -1,12 +1,11 @@
 import React from "react";
-import Select from "react-select"
-import { data } from "./data";
+import { CustomSelect } from "./CustomSelect"
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      data: data.map((el, index) => this.composeOption(el, index)),
+      data: null,
       list: []
     };
     this.handleSelect = this.handleSelect.bind(this);
@@ -14,24 +13,10 @@ class App extends React.Component {
     this.removeItem = this.removeItem.bind(this);
   }
 
-  composeSelect() {
-    const colourStyles = {
-      option: (styles, { data }) => ({
-          ...styles,
-          backgroundColor: data.isSelected ? "#96d1fb" : "#fff",
-        })
-    };
-
+  composeSelect(data) {
     return (
       <div className="flex">
-        <Select
-          isMulti
-          value = { null }
-          options = { this.getOptions() }
-          onChange = { (val) => this.handleSelect(val) }
-          styles = { colourStyles }
-          className="select"
-        />
+        { CustomSelect(data, (val) => this.handleSelect(val)) }
         <button
           className="btn__clear"
           onClick = {() => this.clearAll()}
@@ -42,10 +27,11 @@ class App extends React.Component {
   }
 
   composeOption(val, index) {
+    const id = val.split(" ").join("_").toLowerCase();
     return {
-      id: `option_${index}`,
+      id,
       index,
-      key: `option_${index}`,
+      key: `option_${id}`,
       label: val,
       value: val.toLowerCase(),
       isSelected: val.isSelected || false
@@ -54,13 +40,14 @@ class App extends React.Component {
 
   composeList() {
     return this.state.list.map(item => (
-      <li className="list_item flex bordered" key={ `item_${item.index}` }>
+      <li className="list_item flex bordered" key={ `item_${item.id}` }>
         <span>
           { item.label }
         </span>
         <button
           className="btn__close"
           onClick={() => this.removeItem(item.id)}
+          area-label="Remove"
           >&times;
         </button>
       </li>
@@ -93,6 +80,23 @@ class App extends React.Component {
     });
   }
 
+  componentDidMount() {
+    const headers = new Headers({
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    });
+
+    fetch("./data.json", {
+      headers,
+    })
+      .then(response => {
+        return response.json();
+      })
+      .then(dataObj => {
+        this.setState({ data: dataObj.data.map((el, index) => this.composeOption(el, index)) });
+      });
+  }
+
   render() {
     return (
       <div className = "main">
@@ -102,7 +106,7 @@ class App extends React.Component {
             : <li className = "list_item flex bordered">All</li>
             }
         </ul>
-        { this.composeSelect() }
+        { this.composeSelect(this.state.data) }
       </div>
     );
   }
