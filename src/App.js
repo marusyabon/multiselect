@@ -1,29 +1,16 @@
 import React from "react";
-import { CustomSelect } from "./CustomSelect"
+import CustomSelect from "./CustomSelect"
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      data: null,
-      list: []
+      data: [],
+      list: [],
+      isPopupsVisible: false
     };
     this.handleSelect = this.handleSelect.bind(this);
-    this.getOptions = this.getOptions.bind(this);
     this.removeItem = this.removeItem.bind(this);
-  }
-
-  composeSelect(data) {
-    return (
-      <div className="flex">
-        { CustomSelect(data, (val) => this.handleSelect(val)) }
-        <button
-          className="btn__clear"
-          onClick = {() => this.clearAll()}
-          >Clear selection
-        </button>
-      </div>
-    )
   }
 
   composeOption(val, index) {
@@ -55,16 +42,13 @@ class App extends React.Component {
   }
 
   handleSelect(val) {
-    const selectionState = val[0].isSelected;
-    val[0].isSelected = !selectionState;
+    const selectionState = val.isSelected;
+    val.isSelected = !selectionState;
     const list = selectionState
-      ? this.state.list.filter(item => item.id !== val[0].id)
+      ? this.state.list.filter(item => item.id !== val.id)
       : this.state.list.concat(val);
-    this.setState({ list });
-  }
-
-  getOptions() {
-    return this.state.data;
+    const data = this.state.data.map(item => item.id === val.id ? val : item);
+    this.setState({ list, data });
   }
 
   removeItem(id) {
@@ -106,7 +90,17 @@ class App extends React.Component {
             : <li className = "list_item flex bordered">All</li>
             }
         </ul>
-        { this.composeSelect(this.state.data) }
+        <div className="flex align_start">
+          <CustomSelect
+            options={ this.state.data }
+            onChange={ (val) => this.handleSelect(val) }
+          />
+          <button
+            className="btn__clear"
+            onClick = {() => this.clearAll()}
+            >Clear selection
+          </button>
+        </div>
       </div>
     );
   }
